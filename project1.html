@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuralQuery</title>
+    <link rel="stylesheet" href="project1.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-shell">
+        <nav class="navbar">
+            <div class="nav-left">
+                <i class="ri-bubble-chart-fill logo-icon"></i>
+                <span class="brand-name">NeuralQuery</span>
+            </div>
+            <div class="nav-center">
+                <ul class="nav-menu">
+                    <li><a href="#" class="active">Translator</a></li>
+                    <li><a href="#">Data Sources</a></li>
+                    <li><a href="#">Logs</a></li>
+                </ul>
+            </div>
+            <div class="nav-right">
+                <div class="status-indicator">
+                    <span class="dot"></span> System Ready
+                </div>
+                <div class="user-avatar">SH</div>
+            </div>
+        </nav>
+
+        <div class="main-container">
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <label>MODULES</label>
+                    <div class="side-item active"><i class="ri-terminal-line"></i> Query Engine</div>
+                    <div class="side-item"><i class="ri-bar-chart-box-line"></i> Visualizations</div>
+                    <div class="side-item"><i class="ri-database-line"></i> Schema Map</div>
+                </div>
+                <div class="sidebar-section">
+                    <label>HISTORY</label>
+                    <div class="history-list" id="queryHistory">
+                        <div class="history-item">Date :Time</div>
+                        <div class="history-item">Date :Time</div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="content-area">
+                <header class="content-header">
+                    <h1>NLP to SQL Translator</h1>
+                    <p>Submit your requirement in natural language to generate efficient database queries.</p>
+                </header>
+
+                <div class="search-container">
+                    <div class="input-group">
+                        <i class="ri-search-line"></i>
+                        <input type="text" id="nlpInput" placeholder="List employee names and salaries where salary is greater than 50000">
+                        <button onclick="handleTranslation()" id="genBtn">Generate</button>
+                    </div>
+                </div>
+
+                <div class="results-layout">
+                    <div class="card sql-box">
+                        <div class="card-header">
+                            <h3><i class="ri-code-line"></i> Generated SQL</h3>
+                            <button class="copy-btn" onclick="copyCode()"><i class="ri-file-copy-line"></i></button>
+                        </div>
+                        <pre id="sqlOutput">SELECT employee_name, salary
+FROM employees
+WHERE salary > 50000;
+</pre>
+                    </div>
+
+                    <div class="card logic-box">
+                        <div class="card-header">
+                            <h3><i class="ri-lightbulb-flash-line"></i> Execution Logic</h3>
+                        </div>
+                        <div id="logicExplanation" class="logic-text">
+                            The platform intelligently analyzes the user’s intent and automatically derives the required joins, conditions, and constraints.
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="project1.js"></script>
+</body>
+</html>
