@@ -5,13 +5,10 @@ import os, json, re
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'neuralquery_secret_key_2024')
+app.secret_key = os.environ.get('SECRET_KEY')
 
 # ── Database 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-    'DATABASE_URL',
-    'postgresql://neondb_owner:npg_e9GpmOzvNjb3@ep-shiny-credit-ao6nq900-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
-)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
 
