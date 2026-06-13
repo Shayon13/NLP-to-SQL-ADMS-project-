@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuralQuery — Intelligent NLP Database Analytics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #060810;
+            --surface: #0c0f1a;
+            --surface2: #111627;
+            --border: rgba(99, 179, 237, 0.12);
+            --blue: #4F9CF9;
+            --blue-dim: rgba(79, 156, 249, 0.15);
+            --cyan: #22D3EE;
+            --green: #10B981;
+            --text: #E2E8F0;
+            --muted: #64748B;
+            --dim: #334155;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(79,156,249,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(79,156,249,0.04) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Glow orb */
+        .glow-orb {
+            position: fixed;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(79,156,249,0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            top: -200px; left: 50%;
+            transform: translateX(-50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 60px; height: 72px;
+            background: rgba(6, 8, 16, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex; align-items: center; gap: 12px;
+            text-decoration: none; color: inherit;
+        }
+        .logo-mark {
+            width: 36px; height: 36px;
+            background: var(--blue-dim);
+            border: 1px solid var(--blue);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'DM Mono', monospace;
+            font-size: 14px; font-weight: 500;
+            color: var(--blue);
+        }
+        .logo-text {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700; font-size: 18px;
+            letter-spacing: -0.3px;
+        }
+
+        .nav-status {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 12px; color: var(--green);
+            font-family: 'DM Mono', monospace;
+        }
+        .status-pulse {
+            width: 7px; height: 7px;
+            background: var(--green); border-radius: 50%;
+            box-shadow: 0 0 8px var(--green);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text); padding: 8px 20px;
+            border-radius: 8px; cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px; font-weight: 500;
+            transition: all 0.2s; text-decoration: none;
+            display: inline-block;
+        }
+        .btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
+        .btn-primary {
+            background: var(--blue); color: #fff;
+            border: none; padding: 8px 20px;
+            border-radius: 8px; cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px; font-weight: 600;
+            transition: all 0.2s; text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary:hover { background: #3b8ef0; transform: translateY(-1px); }
+
+        /* Hero */
+        .hero {
+            position: relative; z-index: 1;
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 100px 20px 60px;
+            text-align: center;
+        }
+
+        .badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--blue-dim);
+            border: 1px solid rgba(79,156,249,0.3);
+            border-radius: 100px; padding: 6px 16px;
+            font-size: 12px; font-family: 'DM Mono', monospace;
+            color: var(--blue); margin-bottom: 32px;
+            animation: fadeIn 0.6s ease;
+        }
+        .badge-dot { width: 6px; height: 6px; background: var(--cyan); border-radius: 50%; }
+
+        h1.hero-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(3rem, 7vw, 6rem);
+            font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: -2px;
+            margin-bottom: 24px;
+            animation: fadeUp 0.7s ease 0.1s both;
+        }
+        .title-highlight { color: var(--blue); position: relative; }
+        .title-highlight::after {
+            content: '';
+            position: absolute; bottom: -4px; left: 0; right: 0;
+            
+        }
+
+        .hero-sub {
+            font-size: 18px; color: var(--muted); max-width: 560px;
+            line-height: 1.7; margin-bottom: 48px;
+            animation: fadeUp 0.7s ease 0.2s both;
+        }
+
+        .hero-actions {
+            display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+            animation: fadeUp 0.7s ease 0.3s both;
+        }
+        .btn-lg {
+            padding: 14px 32px; font-size: 15px;
+            border-radius: 10px; font-weight: 600;
+        }
+
+        /* Demo query box */
+        .demo-box {
+            margin-top: 80px; width: 100%; max-width: 760px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px; overflow: hidden;
+            animation: fadeUp 0.7s ease 0.4s both;
+        }
+        .demo-topbar {
+            display: flex; align-items: center; gap: 8px;
+            padding: 12px 20px;
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
+        }
+        .demo-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .demo-label {
+            margin-left: auto;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px; color: var(--muted);
+        }
+        .demo-content { padding: 24px; }
+        .demo-nl {
+            font-size: 15px; color: var(--text);
+            margin-bottom: 20px; padding: 14px 16px;
+            background: rgba(79,156,249,0.05);
+            border: 1px solid rgba(79,156,249,0.15);
+            border-radius: 8px;
+        }
+        .demo-nl span { color: var(--muted); font-size: 12px; display: block; margin-bottom: 6px; font-family: 'DM Mono', monospace; }
+        .demo-sql {
+            font-family: 'DM Mono', monospace;
+            font-size: 13px; line-height: 1.8;
+            color: #7dd3fc; padding: 16px;
+            background: #060810;
+            border-radius: 8px;
+        }
+        .sql-kw { color: #a78bfa; }
+        .sql-fn { color: #34d399; }
+        .sql-str { color: #fbbf24; }
+        .sql-num { color: #fb923c; }
+
+        /* Features */
+        .features {
+            position: relative; z-index: 1;
+            padding: 80px 60px;
+            max-width: 1200px; margin: 0 auto;
+        }
+        .section-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px; color: var(--blue);
+            text-transform: uppercase; letter-spacing: 3px;
+            margin-bottom: 16px;
+        }
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700; letter-spacing: -1px;
+            margin-bottom: 60px;
+        }
+
+        .feat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .feat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px; padding: 28px;
+            transition: all 0.3s;
+        }
+        .feat-card:hover {
+            border-color: rgba(79,156,249,0.4);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .feat-icon {
+            width: 48px; height: 48px;
+            background: var(--blue-dim);
+            border: 1px solid rgba(79,156,249,0.2);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; margin-bottom: 20px;
+        }
+        .feat-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 600; font-size: 17px;
+            margin-bottom: 10px;
+        }
+        .feat-desc { color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+        /* Architecture */
+        .arch-section {
+            position: relative; z-index: 1;
+            padding: 0px 60px;
+            max-width: 1200px; margin: 0 auto;
+        }
+        .arch-row {
+            display: flex; align-items: center;
+            justify-content: center; gap: 0;
+        }
+        .arch-node {
+            display: flex; flex-direction: column;
+            align-items: center; text-align: center;
+            flex: 1; max-width: 240px;
+        }
+        .arch-icon-box {
+            width: 90px; height: 90px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 36px; margin-bottom: 16px;
+            transition: all 0.3s;
+        }
+        .arch-node.active .arch-icon-box {
+            border-color: var(--blue);
+            box-shadow: 0 0 30px rgba(79,156,249,0.2);
+            background: var(--blue-dim);
+        }
+        .arch-node.active:hover .arch-icon-box {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(79,156,249,0.3);
+        }
+        .arch-name {
+            font-family: 'Syne', sans-serif;
+            font-weight: 600; font-size: 15px;
+            margin-bottom: 8px;
+        }
+        .arch-name.blue { color: var(--blue); }
+        .arch-desc { color: var(--muted); font-size: 13px; max-width: 180px; }
+        .arch-arrow {
+            display: flex; align-items: center;
+            padding: 0 10px; padding-bottom: 40px;
+        }
+        .arch-line {
+            width: 60px; height: 2px;
+            background: linear-gradient(90deg, var(--dim), var(--blue), var(--dim));
+            position: relative;
+        }
+        .arch-line::after {
+            content: '▶';
+            position: absolute; right: -8px; top: -8px;
+            color: var(--blue); font-size: 12px;
+        }
+
+        /* CTA */
+        .cta-section {
+            position: relative; z-index: 1;
+            padding: 80px 20px 120px;
+            text-align: center;
+        }
+        .cta-card {
+            max-width: 700px; margin: 0 auto;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px; padding: 60px;
+        }
+        .cta-card h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 2.5rem; font-weight: 700;
+            letter-spacing: -1px; margin-bottom: 16px;
+        }
+        .cta-card p { color: var(--muted); margin-bottom: 32px; font-size: 16px; }
+
+        footer {
+            position: relative; z-index: 1;
+            border-top: 1px solid var(--border);
+            padding: 30px 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 13px; color: var(--muted);
+            font-family: 'DM Mono', monospace;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 900px) {
+            nav { padding: 0 20px; }
+            .feat-grid { grid-template-columns: 1fr; }
+            .features, .arch-section { padding: 60px 20px; }
+            .arch-row { flex-direction: column; gap: 30px; }
+            .arch-arrow { transform: rotate(90deg); padding: 0; }
+            footer { flex-direction: column; gap: 12px; text-align: center; }
+        }
+    </style>
+    <script src="/static/theme.js"></script>
+</head>
+<body>
+    <div class="glow-orb"></div>
+
+    <nav>
+        <a href="/" class="logo">
+            <div class="logo-mark">NQ</div>
+            <div class="logo-text">NeuralQuery</div>
+        </a>
+        <div class="nav-status">
+            <div class="status-pulse"></div>
+            SQL Engine Online
+        </div>
+        <div class="nav-right">
+            <a href="/login" class="btn-ghost">Sign In</a>
+            <a href="/register" class="btn-primary">Get Started</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="badge">
+            <div class="badge-dot"></div>
+            Intelligent NL- Powered Database Analytics System
+        </div>
+        <h1 class="hero-title">
+            Query Databases<br>in <span class="title-highlight">Plain English</span>
+        </h1>
+        <p class="hero-sub">
+            NeuralQuery translates your natural language questions into precise, optimized SQL queries using advanced AI — no SQL expertise required.
+        </p>
+        <div class="hero-actions">
+            <a href="/register" class="btn-primary btn-lg">Start Querying Free</a>
+            <a href="/login" class="btn-ghost btn-lg">Sign In →</a>
+        </div>
+
+        <div class="demo-box">
+            <div class="demo-topbar">
+                <div class="demo-dot" style="background:#ef4444"></div>
+                <div class="demo-dot" style="background:#f59e0b"></div>
+                <div class="demo-dot" style="background:#10b981"></div>
+                <span class="demo-label">NeuralQuery Engine </span>
+            </div>
+            <div class="demo-content">
+                <div class="demo-nl">
+                    <span>// Natural Language Input</span>
+                    "Show me top 5 customers by total order value this quarter, along with their last purchase date"
+                </div>
+                <div class="demo-sql">
+<span class="sql-kw">SELECT</span> c.customer_name, c.email,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">SUM</span>(o.total_amount) <span class="sql-kw">AS</span> total_order_value,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="sql-fn">MAX</span>(o.order_date) <span class="sql-kw">AS</span> last_purchase_date<br>
+<span class="sql-kw">FROM</span> customers c<br>
+<span class="sql-kw">INNER JOIN</span> orders o <span class="sql-kw">ON</span> c.id = o.customer_id<br>
+<span class="sql-kw">WHERE</span> o.order_date &gt;= <span class="sql-fn">DATE_TRUNC</span>(<span class="sql-str">'quarter'</span>, <span class="sql-fn">CURRENT_DATE</span>)<br>
+<span class="sql-kw">GROUP BY</span> c.customer_name, c.email<br>
+<span class="sql-kw">ORDER BY</span> total_order_value <span class="sql-kw">DESC</span><br>
+<span class="sql-kw">LIMIT</span> <span class="sql-num">5</span>;
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="section-label"> </div>
+        <div class="section-title">Built for Data Intelligence</div>
+        <div class="feat-grid">
+            <div class="feat-card">
+                <div class="feat-icon">🧠</div>
+                <div class="feat-title">AI-Powered Translation</div>
+                <div class="feat-desc"> AI accurately converts complex natural language questions into optimized SQL with proper JOINs, aggregations, and filters.</div>
+            </div>
+            <div class="feat-card">
+                <div class="feat-icon">⚡</div>
+                <div class="feat-title">Real-time Generation</div>
+                <div class="feat-desc">Get production-ready SQL queries in under 2 seconds. No configuration needed — works with any relational database schema.</div>
+            </div>
+            <div class="feat-card">
+                <div class="feat-icon">🔍</div>
+                <div class="feat-title">Logic Explanation</div>
+                <div class="feat-desc">Every query comes with a clear explanation of the execution logic, so you understand exactly how the AI approached your request.</div>
+            </div>
+            <div class="feat-card">
+                <div class="feat-icon">📋</div>
+                <div class="feat-title">Query History</div>
+                <div class="feat-desc">All your past queries are saved and searchable. Re-run, refine, or export any query from your personal history log.</div>
+            </div>
+            <div class="feat-card">
+                <div class="feat-icon">🔐</div>
+                <div class="feat-title">Secure Authentication</div>
+                <div class="feat-desc">Enterprise-grade session management with bcrypt password hashing and PostgreSQL-backed user accounts.</div>
+            </div>
+            <div class="feat-card">
+                <div class="feat-icon">📊</div>
+                <div class="feat-title">Schema Context</div>
+                <div class="feat-desc">Provide your database schema to get even more accurate, table-specific SQL generation tailored to your data model.</div>
+            </div>
+        </div>
+    </section>
+    <section class="arch-section">
+        <div class="section-label"> </div>
+        <div class="section-title">How It Works</div>
+        <div class="arch-row">
+            <div class="arch-node">
+                <div class="arch-icon-box">💬</div>
+                <div class="arch-name">Natural Language</div>
+                <div class="arch-desc">Type your question in plain English</div>
+            </div>
+            <div class="arch-arrow"><div class="arch-line"></div></div>
+            <div class="arch-node active">
+                <a href="/login" style="text-decoration:none;color:inherit;display:contents">
+                    <div class="arch-icon-box">🤖</div>
+                    <div class="arch-name blue">Neural Core Engine</div>
+                    <div class="arch-desc">Claude AI processes and generates optimized SQL</div>
+                </a>
+            </div>
+            <div class="arch-arrow"><div class="arch-line"></div></div>
+            <div class="arch-node">
+                <div class="arch-icon-box">🗄️</div>
+                <div class="arch-name">SQL Output</div>
+                <div class="arch-desc">Production-ready query with logic explanation</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="cta-card">
+            <h2>Ready to Query Smarter?</h2>
+            <p>Join NeuralQuery and start converting natural language to SQL in seconds. Free to get started.</p>
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+                <a href="/register" class="btn-primary btn-lg">Create Free Account</a>
+                <a href="/login" class="btn-ghost btn-lg">Sign In</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <span></span>
+        <span></span>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard </title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg:#060810; --surface:#0c0f1a; --surface2:#111627;
+            --border:rgba(99,179,237,0.12); --blue:#4F9CF9;
+            --blue-dim:rgba(79,156,249,0.12); --cyan:#22D3EE;
+            --green:#10B981; --red:#EF4444; --amber:#F59E0B;
+            --text:#E2E8F0; --muted:#64748B; --dim:#1e293b;
+        }
+        /* ── Light Mode ── */
+        [data-theme="light"] {
+            --bg:#EEF2F7; --surface:#FFFFFF; --surface2:#F4F7FB;
+            --border:rgba(100,116,139,0.18); --blue:#2563EB;
+            --blue-dim:rgba(37,99,235,0.08); --cyan:#0891B2;
+            --green:#059669; --red:#DC2626; --amber:#D97706;
+            --text:#0F172A; --muted:#475569; --dim:#94A3B8;
+        }
+        [data-theme="light"] body::before{background-image:linear-gradient(rgba(37,99,235,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,0.03) 1px,transparent 1px);}
+        html{transition:background 0.3s,color 0.3s;}
+        body{transition:background 0.3s,color 0.3s;}
+        [data-theme="light"] .code-area{color:#1e40af;}
+        [data-theme="light"] .kw{color:#7c3aed;}
+        [data-theme="light"] .fn{color:#065f46;}
+        [data-theme="light"] .str{color:#92400e;}
+        [data-theme="light"] .num{color:#c2410c;}
+        [data-theme="light"] .cm{color:#94a3b8;}
+
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+        /* ── Navbar ── */
+        .navbar{height:64px;min-height:64px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;gap:20px;z-index:100;}
+        .nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;}
+        .logo-mark{width:32px;height:32px;background:var(--blue-dim);border:1px solid var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:12px;color:var(--blue);}
+        .brand-text{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;}
+        .nav-tabs{display:flex;gap:4px;}
+        .nav-tab{display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border:none;background:transparent;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+        .nav-tab.active{background:var(--blue-dim);color:var(--blue);}
+        .nav-tab:hover:not(.active){background:var(--surface2);color:var(--text);}
+        .nav-right{display:flex;align-items:center;gap:12px;}
+        .status-badge{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--green);font-family:'DM Mono',monospace;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:100px;padding:4px 12px;}
+        .status-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+        .user-menu{position:relative;}
+        .user-avatar{width:34px;height:34px;background:linear-gradient(135deg,var(--blue),var(--cyan));border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:transform 0.2s;}
+        .user-avatar:hover{transform:scale(1.05);}
+        .dropdown{position:absolute;top:44px;right:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:8px;min-width:180px;display:none;box-shadow:0 20px 40px rgba(0,0,0,0.4);z-index:200;}
+        .dropdown.open{display:block;}
+        .dropdown-name{padding:8px 12px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);margin-bottom:4px;}
+        .dropdown-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:13px;color:var(--muted);cursor:pointer;text-decoration:none;transition:all 0.15s;}
+        .dropdown-item:hover{background:var(--surface2);color:var(--text);}
+        .dropdown-item.danger:hover{background:rgba(239,68,68,0.1);color:var(--red);}
+
+        /* ── Layout ── */
+        .layout{display:flex;flex:1;overflow:hidden;}
+
+        /* ── Sidebar ── */
+        .sidebar{width:256px;min-width:256px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 16px;overflow-y:auto;}
+        .sidebar-section{margin-bottom:28px;}
+        .sidebar-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:10px;padding:0 8px;}
+        .sidebar-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:13px;color:var(--muted);cursor:pointer;border:none;background:transparent;width:100%;text-align:left;transition:all 0.15s;margin-bottom:2px;font-family:'DM Sans',sans-serif;}
+        .sidebar-item.active{background:var(--blue-dim);color:var(--blue);}
+        .sidebar-item:hover:not(.active){background:var(--surface2);color:var(--text);}
+        .history-section{margin-top:auto;}
+        .history-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 8px;}
+        .history-clear{font-size:11px;color:var(--muted);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;transition:color 0.2s;}
+        .history-clear:hover{color:var(--red);}
+        .history-list{max-height:220px;overflow-y:auto;}
+        .history-item{padding:8px 12px;border-radius:8px;cursor:pointer;transition:all 0.15s;margin-bottom:2px;}
+        .history-item:hover{background:var(--surface2);}
+        .history-item-query{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;}
+        .history-item-time{font-size:10px;color:var(--dim);font-family:'DM Mono',monospace;}
+
+        /* ── Workspace ── */
+        .workspace{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+
+        /* ── View Panels ── */
+        .view-panel{display:none;flex:1;flex-direction:column;overflow:hidden;}
+        .view-panel.active{display:flex;}
+
+        /* ── Translator View ── */
+        .query-area{padding:24px 28px 0;}
+        .page-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px;letter-spacing:-0.5px;}
+        .page-sub{color:var(--muted);font-size:13px;margin-bottom:16px;}
+        .schema-toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer;margin-bottom:12px;background:none;border:none;font-family:'DM Sans',sans-serif;transition:color 0.2s;}
+        .schema-toggle:hover{color:var(--blue);}
+        .schema-area{display:none;margin-bottom:12px;}
+        .schema-area.open{display:block;}
+        .schema-input{width:100%;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;outline:none;resize:none;height:80px;transition:border-color 0.2s;}
+        .schema-input:focus{border-color:rgba(79,156,249,0.4);}
+        .input-row{display:flex;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 10px 10px 16px;transition:border-color 0.2s;align-items:center;}
+        .input-row:focus-within{border-color:rgba(79,156,249,0.4);}
+        .query-icon{color:var(--muted);display:flex;align-items:center;}
+        .query-input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;}
+        .query-input::placeholder{color:var(--muted);}
+        .dialect-select{background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;padding:6px 10px;border-radius:7px;outline:none;cursor:pointer;transition:border-color 0.2s;}
+        .dialect-select:hover,.dialect-select:focus{border-color:var(--blue);color:var(--blue);}
+        .btn-generate{background:var(--blue);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap;display:flex;align-items:center;gap:8px;}
+        .btn-generate:hover{background:#3b8ef0;}
+        .btn-generate:disabled{opacity:0.6;cursor:not-allowed;}
+        .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;display:none;animation:spin 0.6s linear infinite;}
+        .btn-examples{display:flex;gap:8px;padding:12px 0;flex-wrap:wrap;}
+        .example-chip{display:inline-flex;align-items:center;padding:4px 12px;border-radius:100px;font-size:12px;color:var(--muted);border:1px solid var(--border);cursor:pointer;background:transparent;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+        .example-chip:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-dim);}
+        .results-area{flex:1;display:grid;grid-template-columns:1.6fr 1fr;gap:16px;padding:16px 28px 20px;overflow:auto;min-height:0;}
+        .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;display:flex;flex-direction:column;overflow:hidden;}
+        .panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
+        .panel-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;}
+        .panel-badge{font-family:'DM Mono',monospace;font-size:10px;padding:2px 8px;border-radius:100px;background:var(--blue-dim);color:var(--blue);}
+        .panel-actions{display:flex;gap:6px;align-items:center;}
+        .icon-btn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:7px;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:14px;background:transparent;transition:all 0.15s;}
+        .icon-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-dim);}
+        .icon-btn.danger-btn:hover{border-color:var(--red);color:var(--red);background:rgba(239,68,68,0.1);}
+        .code-area{flex:1;padding:18px;font-family:'DM Mono',monospace;font-size:13px;line-height:1.85;color:#7dd3fc;overflow-y:auto;white-space:pre-wrap;word-break:break-all;min-height:160px;}
+        .code-area.placeholder{color:var(--dim);}
+        .kw{color:#a78bfa;} .fn{color:#34d399;} .str{color:#fbbf24;} .num{color:#fb923c;} .cm{color:#475569;font-style:italic;}
+        .logic-area{flex:1;padding:18px;font-size:13px;line-height:1.75;color:var(--muted);overflow-y:auto;}
+
+        /* ── Visualizations View ── */
+        .viz-view{padding:24px 28px;overflow-y:auto;flex:1;}
+        .viz-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;}
+        .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;}
+        .stat-label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+        .stat-value{font-family:'Syne',sans-serif;font-size:2rem;font-weight:700;color:var(--blue);}
+        .stat-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+        .viz-charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+        .viz-chart-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;}
+        .viz-chart-title{font-size:13px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+        .viz-chart-wrap{height:240px;position:relative;}
+
+        /* ── Schema Map View ── */
+        .schema-view{padding:24px 28px;overflow-y:auto;flex:1;}
+        .schema-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap;}
+        .schema-name-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:9px 14px;border-radius:9px;outline:none;width:220px;transition:border-color 0.2s;}
+        .schema-name-input:focus{border-color:var(--blue);}
+        .schema-name-input::placeholder{color:var(--muted);}
+        .btn-add{display:flex;align-items:center;gap:6px;background:var(--blue);color:#fff;border:none;padding:9px 16px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.2s;}
+        .btn-add:hover{background:#3b8ef0;}
+        .btn-secondary{display:flex;align-items:center;gap:6px;background:transparent;color:var(--muted);border:1px solid var(--border);padding:9px 16px;border-radius:9px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+        .btn-secondary:hover{border-color:var(--blue);color:var(--blue);}
+        .schema-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+        .schema-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+        .schema-card-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border-bottom:1px solid var(--border);}
+        .schema-table-name{font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--blue);display:flex;align-items:center;gap:6px;}
+        .schema-cols{padding:10px 14px;}
+        .schema-col-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.03);}
+        .schema-col-text{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);}
+        .schema-col-del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px;line-height:1;transition:color 0.15s;padding:0 2px;}
+        .schema-col-del:hover{color:var(--red);}
+        .schema-add-col{display:flex;align-items:center;gap:6px;padding:8px 14px;border-top:1px solid var(--border);}
+        .schema-col-input{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:7px 10px;border-radius:7px;outline:none;transition:border-color 0.2s;}
+        .schema-col-input:focus{border-color:var(--blue);}
+        .schema-col-input::placeholder{color:var(--dim);}
+
+        /* ── Query Logs View ── */
+        .logs-view{padding:24px 28px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px;}
+        .logs-toolbar{display:flex;gap:10px;align-items:center;}
+        .log-search{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:9px 14px;border-radius:9px;outline:none;transition:border-color 0.2s;}
+        .log-search::placeholder{color:var(--muted);}
+        .log-search:focus{border-color:var(--blue);}
+        .logs-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;flex:1;}
+        table{width:100%;border-collapse:collapse;}
+        thead tr{background:var(--surface2);}
+        th{padding:12px 16px;text-align:left;font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;color:var(--muted);border-bottom:1px solid var(--border);}
+        .log-td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:top;}
+        .log-nl{font-size:13px;color:var(--text);margin-bottom:4px;}
+        .log-sql-preview{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);}
+        .log-time{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);white-space:nowrap;}
+
+        /* ── Notification ── */
+        #notification{position:fixed;top:80px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;display:none;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.3);}
+
+        /* ══════════════════════════════════════
+           MODAL SYSTEM
+        ══════════════════════════════════════ */
+        .nq-backdrop{
+            position:fixed;inset:0;
+            background:rgba(4,6,14,0.75);
+            backdrop-filter:blur(6px);
+            -webkit-backdrop-filter:blur(6px);
+            z-index:2000;
+            display:flex;align-items:center;justify-content:center;
+            padding:20px;
+            opacity:0;
+            transition:opacity 0.22s ease;
+            pointer-events:none;
+        }
+        .nq-backdrop.open{
+            opacity:1;
+            pointer-events:all;
+        }
+        [data-theme="light"] .nq-backdrop{
+            background:rgba(15,23,42,0.55);
+        }
+
+        /* Modal card */
+        .nq-modal{
+            background:var(--surface);
+            border:1px solid var(--border);
+            border-radius:20px;
+            width:100%;
+            display:flex;
+            flex-direction:column;
+            box-shadow:0 40px 100px rgba(0,0,0,0.55),0 0 0 1px rgba(99,179,237,0.06);
+            transform:translateY(20px) scale(0.98);
+            transition:transform 0.25s cubic-bezier(0.34,1.3,0.64,1),opacity 0.22s ease;
+            opacity:0;
+            overflow:hidden;
+        }
+        .nq-backdrop.open .nq-modal{
+            transform:translateY(0) scale(1);
+            opacity:1;
+        }
+        [data-theme="light"] .nq-modal{
+            box-shadow:0 32px 80px rgba(15,23,42,0.18),0 0 0 1px rgba(100,116,139,0.1);
+        }
+
+        /* Modal sizes */
+        .nq-modal-lg{max-width:720px;}
+        .nq-modal-sm{max-width:420px;}
+
+        /* Modal header */
+        .nq-modal-head{
+            display:flex;align-items:center;justify-content:space-between;
+            padding:20px 24px 18px;
+            border-bottom:1px solid var(--border);
+            flex-shrink:0;
+        }
+        .nq-modal-title{
+            display:flex;align-items:center;gap:10px;
+        }
+        .nq-modal-icon{
+            width:34px;height:34px;
+            border-radius:9px;
+            display:flex;align-items:center;justify-content:center;
+            font-size:15px;
+            flex-shrink:0;
+        }
+        .nq-icon-blue{background:var(--blue-dim);color:var(--blue);}
+        .nq-icon-red{background:rgba(239,68,68,0.1);color:var(--red);}
+        .nq-icon-amber{background:rgba(245,158,11,0.1);color:var(--amber);}
+        [data-theme="light"] .nq-icon-red{background:rgba(220,38,38,0.08);}
+        [data-theme="light"] .nq-icon-amber{background:rgba(217,119,6,0.08);}
+
+        .nq-modal-label{
+            font-family:'Syne',sans-serif;
+            font-size:15px;font-weight:700;
+            color:var(--text);
+            letter-spacing:-0.3px;
+        }
+        .nq-modal-sublabel{
+            font-size:11px;color:var(--muted);
+            font-family:'DM Mono',monospace;
+            margin-top:1px;
+        }
+        .nq-modal-close{
+            width:30px;height:30px;
+            border-radius:8px;
+            border:1px solid var(--border);
+            background:transparent;
+            color:var(--muted);
+            cursor:pointer;
+            display:flex;align-items:center;justify-content:center;
+            font-size:16px;
+            transition:all 0.15s;
+            flex-shrink:0;
+        }
+        .nq-modal-close:hover{
+            border-color:var(--red);
+            color:var(--red);
+            background:rgba(239,68,68,0.08);
+        }
+
+        /* Modal body */
+        .nq-modal-body{
+            padding:22px 24px;
+            overflow-y:auto;
+            flex:1;
+            display:flex;
+            flex-direction:column;
+            gap:18px;
+        }
+        .nq-modal-body::-webkit-scrollbar{width:4px;}
+        .nq-modal-body::-webkit-scrollbar-track{background:transparent;}
+        .nq-modal-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+        /* Field blocks inside modal */
+        .nq-field-label{
+            font-size:10px;
+            color:var(--muted);
+            font-family:'DM Mono',monospace;
+            text-transform:uppercase;
+            letter-spacing:1.5px;
+            margin-bottom:8px;
+            display:flex;align-items:center;gap:6px;
+        }
+        .nq-field-label i{font-size:12px;}
+        .nq-field-box{
+            background:var(--surface2);
+            border:1px solid var(--border);
+            border-radius:10px;
+            padding:13px 16px;
+            transition:border-color 0.2s;
+        }
+        .nq-field-box:hover{border-color:rgba(79,156,249,0.25);}
+        .nq-query-text{
+            font-size:14px;
+            color:var(--text);
+            line-height:1.6;
+        }
+        .nq-sql-block{
+            font-family:'DM Mono',monospace;
+            font-size:12.5px;
+            line-height:1.9;
+            color:#7dd3fc;
+            white-space:pre-wrap;
+            word-break:break-all;
+            max-height:220px;
+            overflow-y:auto;
+        }
+        [data-theme="light"] .nq-sql-block{color:#1e40af;}
+        .nq-sql-block::-webkit-scrollbar{width:3px;}
+        .nq-sql-block::-webkit-scrollbar-thumb{background:var(--border);}
+        .nq-logic-text{
+            font-size:13px;
+            color:var(--muted);
+            line-height:1.75;
+        }
+
+        /* Dialect pill inside modal */
+        .nq-dialect-pill{
+            display:inline-flex;align-items:center;gap:5px;
+            font-family:'DM Mono',monospace;
+            font-size:10px;
+            padding:3px 9px;
+            border-radius:100px;
+            background:var(--blue-dim);
+            color:var(--blue);
+            border:1px solid rgba(79,156,249,0.2);
+            margin-left:6px;
+            vertical-align:middle;
+        }
+
+        /* Modal footer */
+        .nq-modal-foot{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding:16px 24px;
+            border-top:1px solid var(--border);
+            flex-shrink:0;
+        }
+        .nq-modal-foot-meta{
+            font-size:11px;
+            color:var(--muted);
+            font-family:'DM Mono',monospace;
+            display:flex;align-items:center;gap:6px;
+        }
+        .nq-foot-actions{display:flex;gap:8px;}
+
+        /* Modal buttons */
+        .nq-btn{
+            display:flex;align-items:center;gap:7px;
+            padding:9px 18px;
+            border-radius:9px;
+            font-family:'Syne',sans-serif;
+            font-size:13px;font-weight:600;
+            cursor:pointer;
+            transition:all 0.2s;
+            border:none;
+            white-space:nowrap;
+        }
+        .nq-btn-ghost{
+            background:transparent;
+            color:var(--muted);
+            border:1px solid var(--border);
+        }
+        .nq-btn-ghost:hover{border-color:var(--blue);color:var(--blue);}
+        .nq-btn-primary{
+            background:var(--blue);
+            color:#fff;
+        }
+        .nq-btn-primary:hover{background:#3b8ef0;transform:translateY(-1px);}
+        .nq-btn-danger{
+            background:rgba(239,68,68,0.12);
+            color:var(--red);
+            border:1px solid rgba(239,68,68,0.25);
+        }
+        .nq-btn-danger:hover{background:rgba(239,68,68,0.2);transform:translateY(-1px);}
+
+        /* Confirm modal specifics */
+        .nq-confirm-body{
+            padding:28px 28px 24px;
+            display:flex;
+            gap:16px;
+            align-items:flex-start;
+        }
+        .nq-confirm-icon-wrap{
+            width:44px;height:44px;
+            border-radius:12px;
+            display:flex;align-items:center;justify-content:center;
+            font-size:20px;
+            flex-shrink:0;
+        }
+        .nq-confirm-icon-wrap.red{background:rgba(239,68,68,0.12);color:var(--red);}
+        .nq-confirm-icon-wrap.amber{background:rgba(245,158,11,0.12);color:var(--amber);}
+        .nq-confirm-text h3{
+            font-family:'Syne',sans-serif;
+            font-size:16px;font-weight:700;
+            color:var(--text);
+            margin-bottom:6px;
+        }
+        .nq-confirm-text p{
+            font-size:13px;
+            color:var(--muted);
+            line-height:1.65;
+        }
+        .nq-confirm-text strong{color:var(--text);}
+
+        /* Copy success flash */
+        @keyframes copyFlash{
+            0%{background:rgba(16,185,129,0.15)}
+            100%{background:var(--surface2)}
+        }
+        .copy-flash{animation:copyFlash 0.6s ease forwards;}
+
+        /* Modal open — lock body scroll */
+        body.modal-open{overflow:hidden;}
+    </style>
+    <script src="/static/theme.js"></script>
+</head>
+<body>
+<div id="notification"></div>
+
+<!-- ── Navbar ── -->
+<nav class="navbar">
+    <a href="/" class="nav-brand">
+        <div class="logo-mark">NQ</div>
+        <span class="brand-text">NeuralQuery</span>
+    </a>
+
+    <div class="nav-tabs">
+        <button class="nav-tab" data-view="translator"     onclick="switchView('translator')">
+            <i class="ri-terminal-line"></i> Translator
+        </button>
+        <button class="nav-tab" data-view="visualizations" onclick="switchView('visualizations')">
+            <i class="ri-bar-chart-box-line"></i> Visualization
+        </button>
+        <button class="nav-tab" data-view="schema"         onclick="switchView('schema')">
+            <i class="ri-database-line"></i> Schema Map
+        </button>
+        <button class="nav-tab" data-view="logs"           onclick="switchView('logs')">
+            <i class="ri-file-list-line"></i> Query Logs
+        </button>
+    </div>
+
+    <div class="nav-right">
+        <div class="status-badge">
+            <div class="status-dot"></div> Engine Online
+        </div>
+        <div class="user-menu">
+            <div class="user-avatar" onclick="toggleDropdown()">{{ initials }}</div>
+            <div class="dropdown" id="dropdown">
+                <div class="dropdown-name">{{ user_name }}</div>
+                <a href="/profile" class="dropdown-item"><i class="ri-user-line"></i> Profile</a>
+                <a href="/settings" class="dropdown-item"><i class="ri-settings-line"></i> Settings</a>
+                <a href="/logout" class="dropdown-item danger"><i class="ri-logout-box-line"></i> Sign Out</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="layout">
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-label">Modules</div>
+            <button class="sidebar-item" data-view="translator"     onclick="switchView('translator')">
+                <i class="ri-terminal-line"></i> Query Engine
+            </button>
+            <button class="sidebar-item" data-view="visualizations" onclick="switchView('visualizations')">
+                <i class="ri-bar-chart-box-line"></i> Visualizations
+            </button>
+            <button class="sidebar-item" data-view="schema"         onclick="switchView('schema')">
+                <i class="ri-database-line"></i> Schema Map
+            </button>
+            <button class="sidebar-item" data-view="logs"           onclick="switchView('logs')">
+                <i class="ri-file-list-line"></i> Query Logs
+            </button>
+        </div>
+
+        <div class="history-section">
+            <div class="history-header">
+                <div class="sidebar-label" style="margin:0">Recent History</div>
+                <button class="history-clear" onclick="clearHistory()">Clear</button>
+            </div>
+            <div class="history-list" id="historyList">
+                {% for item in history %}
+                <div class="history-item"
+                     onclick="loadHistory({{ item.natural_query|tojson }}, {{ item.generated_sql|tojson }}, {{ item.logic_explanation|tojson }})">
+                    <div class="history-item-query">{{ item.natural_query }}</div>
+                    <div class="history-item-time">{{ item.created_at.strftime('%b %d, %H:%M') if item.created_at else '' }}</div>
+                </div>
+                {% endfor %}
+                <div id="historyEmpty" style="padding:12px;font-size:12px;color:var(--dim);display:{% if not history %}block{% else %}none{% endif %}">
+                    No queries yet
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── Workspace ── -->
+    <main class="workspace">
+
+        <!-- ═══ TRANSLATOR VIEW ═══ -->
+        <div class="view-panel" id="view-translator">
+            <div class="query-area">
+                <div class="page-title">NL → SQL Translator</div>
+                <div class="page-sub">Describe the data you need in plain English — the AI will write the SQL for you.</div>
+
+                <button class="schema-toggle" onclick="toggleSchema()">
+                    <i class="ri-database-2-line"></i>
+                    <span id="schemaToggleText">+ Add Schema Context (optional)</span>
+                </button>
+                <div class="schema-area" id="schemaArea">
+                    <textarea class="schema-input" id="schemaInput"
+                        placeholder="Paste your table definitions here to improve accuracy, e.g.:&#10;employees(id, name, email, salary, department_id, hire_date)&#10;departments(id, name, manager_id, budget)&#10;orders(id, customer_id, product_id, quantity, total, created_at)"></textarea>
+                </div>
+
+                <div class="input-row">
+                    <div class="query-icon"><i class="ri-search-line"></i></div>
+                    <input type="text" class="query-input" id="nlpInput"
+                        placeholder="e.g. Show me the top 5 customers by total order value this quarter">
+                    <select class="dialect-select" id="dialectSelect" onchange="updateDialectBadge()"
+                            title="SQL dialect to generate">
+                        <option value="postgresql">PostgreSQL</option>
+                        <option value="standard">Standard SQL</option>
+                        <option value="mysql">MySQL</option>
+                        <option value="sqlite">SQLite</option>
+                    </select>
+                    <button class="btn-generate" id="genBtn" onclick="handleTranslation()">
+                        <div class="spinner" id="spinner"></div>
+                        <span id="genBtnText">Generate SQL</span>
+                        <i class="ri-arrow-right-line" id="genIcon"></i>
+                    </button>
+                </div>
+
+                <div class="btn-examples">
+                    <span style="font-size:11px;color:var(--muted);align-self:center;font-family:'DM Mono',monospace;">Try:</span>
+                    <button class="example-chip" onclick="setExample(this)">List employees earning more than $75,000</button>
+                    <button class="example-chip" onclick="setExample(this)">Count total orders placed per customer this year</button>
+                    <button class="example-chip" onclick="setExample(this)">Find products with stock below 10 units</button>
+                    <button class="example-chip" onclick="setExample(this)">Show monthly sales revenue for the last 6 months</button>
+                </div>
+            </div>
+
+            <div class="results-area">
+                <!-- SQL Output -->
+                <div class="panel">
+                    <div class="panel-head">
+                        <div class="panel-title">
+                            <i class="ri-code-s-slash-line"></i>
+                            Generated SQL
+                            <span class="panel-badge" id="sqlDialect">PostgreSQL</span>
+                        </div>
+                        <div class="panel-actions">
+                            <button class="icon-btn" title="Format SQL"  onclick="formatSQL()"><i class="ri-text-wrap"></i></button>
+                            <button class="icon-btn" title="Copy SQL"    onclick="copySQL()"><i class="ri-clipboard-line"></i></button>
+                            <button class="icon-btn" title="Download SQL" onclick="downloadSQL()"><i class="ri-download-line"></i></button>
+                        </div>
+                    </div>
+                    <div class="code-area placeholder" id="sqlOutput"> </div>
+                </div>
+
+                <!-- Logic Explanation -->
+                <div class="panel">
+                    <div class="panel-head">
+                        <div class="panel-title">
+                            <i class="ri-lightbulb-line"></i>
+                            Execution Logic
+                        </div>
+                        <div class="panel-actions">
+                            <button class="icon-btn" title="Copy explanation" onclick="copyLogic()"><i class="ri-clipboard-line"></i></button>
+                        </div>
+                    </div>
+                    <div class="logic-area" id="logicExplanation">
+                        After generating SQL, the AI will explain the logic here — which tables are involved, what filters and joins are applied, and why the query is structured the way it is.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ VISUALIZATIONS VIEW ═══ -->
+        <div class="view-panel" id="view-visualizations">
+            <div class="viz-view">
+                <div class="page-title" style="margin-bottom:4px">Query Visualizations</div>
+                <div class="page-sub" style="margin-bottom:20px">Insights and usage analytics based on your query history.</div>
+
+                <div class="viz-stats">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Queries</div>
+                        <div class="stat-value" id="vizTotal">—</div>
+                        <div class="stat-sub">All time</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Today's Queries</div>
+                        <div class="stat-value" id="vizToday">—</div>
+                        <div class="stat-sub">Last 24 hours</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Most Used Type</div>
+                        <div class="stat-value" style="font-size:1.4rem" id="vizTopType">—</div>
+                        <div class="stat-sub">Query pattern</div>
+                    </div>
+                </div>
+
+                <div class="viz-charts">
+                    <div class="viz-chart-card">
+                        <div class="viz-chart-title"><i class="ri-pie-chart-2-line" style="color:var(--blue)"></i> Query Type Breakdown</div>
+                        <div class="viz-chart-wrap"><canvas id="vizDonut"></canvas></div>
+                    </div>
+                    <div class="viz-chart-card">
+                        <div class="viz-chart-title"><i class="ri-bar-chart-line" style="color:var(--cyan)"></i> Queries Per Day (Last 7 Days)</div>
+                        <div class="viz-chart-wrap"><canvas id="vizBar"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ SCHEMA MAP VIEW ═══ -->
+        <div class="view-panel" id="view-schema">
+            <div class="schema-view">
+                <div class="page-title" style="margin-bottom:4px">Schema Map</div>
+                <div class="page-sub" style="margin-bottom:20px">Define your database tables and columns to get more accurate SQL generation.</div>
+
+                <div class="schema-toolbar">
+                    <input class="schema-name-input" type="text" id="newTableName"
+                           placeholder="Table name, e.g. orders"
+                           onkeydown="if(event.key==='Enter') addSchemaTable()">
+                    <button class="btn-add" onclick="addSchemaTable()">
+                        <i class="ri-add-line"></i> Add Table
+                    </button>
+                    <button class="btn-secondary" onclick="useSchemaInTranslator()">
+                        <i class="ri-terminal-line"></i> Use in Translator
+                    </button>
+                    <button class="btn-secondary" onclick="exportSchema()">
+                        <i class="ri-download-line"></i> Export DDL
+                    </button>
+                </div>
+
+                <div class="schema-cards-grid" id="schemaCards">
+                    <div style="color:var(--muted);font-size:13px;padding:20px 0">
+                        No tables defined yet. Type a table name above and click <strong style="color:var(--text)">Add Table</strong> to start building your schema.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ QUERY LOGS VIEW ═══ -->
+        <div class="view-panel" id="view-logs">
+            <div class="logs-view">
+                <div class="page-title" style="margin-bottom:4px">Query Logs</div>
+                <div class="page-sub">Full history of all your NLP-to-SQL translations.</div>
+
+                <div class="logs-toolbar">
+                    <input class="log-search" type="text" id="logSearch"
+                           placeholder="Search by query text, SQL keyword, or date…"
+                           oninput="filterLogs()">
+                    <button class="btn-secondary" onclick="loadQueryLogs()">
+                        <i class="ri-refresh-line"></i> Refresh
+                    </button>
+                </div>
+
+                <div class="logs-table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Natural Language Query → SQL Preview</th>
+                                <th>Date / Time</th>
+                                <th style="text-align:center;width:50px">Load</th>
+                                <th style="text-align:center;width:50px">Del</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody">
+                            <tr>
+                                <td colspan="4" style="text-align:center;padding:24px;color:var(--muted)">
+                                    Switch to this tab to load your query history.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script src="/static/dashboard.js"></script>
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL 1 — Query Detail
+══════════════════════════════════════════════════════ -->
+<div class="nq-backdrop" id="detailBackdrop" onclick="handleBackdropClick(event,'detailBackdrop')">
+    <div class="nq-modal nq-modal-lg" id="detailModal" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle">
+        <div class="nq-modal-head">
+            <div class="nq-modal-title">
+                <div class="nq-modal-icon nq-icon-blue"><i class="ri-code-s-slash-line"></i></div>
+                <div>
+                    <div class="nq-modal-label" id="detailModalTitle">Query Detail</div>
+                    <div class="nq-modal-sublabel" id="detailModalTime">—</div>
+                </div>
+            </div>
+            <button class="nq-modal-close" onclick="closeModal('detailBackdrop')" title="Close (Esc)">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+
+        <div class="nq-modal-body">
+            <!-- Natural Language -->
+            <div>
+                <div class="nq-field-label"><i class="ri-chat-1-line"></i> Natural Language Query</div>
+                <div class="nq-field-box">
+                    <div class="nq-query-text" id="detailQuery"></div>
+                </div>
+            </div>
+
+            <!-- Generated SQL -->
+            <div>
+                <div class="nq-field-label">
+                    <i class="ri-terminal-line"></i> Generated SQL
+                    <span class="nq-dialect-pill" id="detailDialect"><i class="ri-database-line"></i> PostgreSQL</span>
+                </div>
+                <div class="nq-field-box" id="detailSQLBox">
+                    <div class="nq-sql-block" id="detailSQL"></div>
+                </div>
+            </div>
+
+            <!-- Logic Explanation -->
+            <div>
+                <div class="nq-field-label"><i class="ri-lightbulb-flash-line"></i> Execution Logic</div>
+                <div class="nq-field-box">
+                    <div class="nq-logic-text" id="detailLogic"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="nq-modal-foot">
+            <div class="nq-modal-foot-meta">
+                <i class="ri-time-line"></i>
+                <span id="detailModalFootTime">—</span>
+            </div>
+            <div class="nq-foot-actions">
+                <button class="nq-btn nq-btn-ghost" onclick="modalCopySQL()" id="copyBtn">
+                    <i class="ri-clipboard-line"></i> Copy SQL
+                </button>
+                <button class="nq-btn nq-btn-ghost" onclick="closeModal('detailBackdrop')">
+                    Close
+                </button>
+                <button class="nq-btn nq-btn-primary" onclick="modalLoadInTranslator()">
+                    <i class="ri-arrow-go-back-line"></i> Load in Translator
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL 2 — Delete Confirmation
+══════════════════════════════════════════════════════ -->
+<div class="nq-backdrop" id="deleteBackdrop" onclick="handleBackdropClick(event,'deleteBackdrop')">
+    <div class="nq-modal nq-modal-sm" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+        <div class="nq-modal-head">
+            <div class="nq-modal-title">
+                <div class="nq-modal-icon nq-icon-red"><i class="ri-delete-bin-line"></i></div>
+                <div>
+                    <div class="nq-modal-label" id="deleteModalTitle">Delete Entry</div>
+                    <div class="nq-modal-sublabel">This action cannot be undone</div>
+                </div>
+            </div>
+            <button class="nq-modal-close" onclick="closeModal('deleteBackdrop')">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+
+        <div class="nq-confirm-body">
+            <div class="nq-confirm-icon-wrap red"><i class="ri-error-warning-line"></i></div>
+            <div class="nq-confirm-text">
+                <h3>Delete this query?</h3>
+                <p>The entry <strong id="deleteQueryPreview">"..."</strong> will be permanently removed from your history. This cannot be reversed.</p>
+            </div>
+        </div>
+
+        <div class="nq-modal-foot">
+            <div class="nq-modal-foot-meta">
+                <i class="ri-shield-line"></i> Permanent deletion
+            </div>
+            <div class="nq-foot-actions">
+                <button class="nq-btn nq-btn-ghost" onclick="closeModal('deleteBackdrop')">
+                    Cancel
+                </button>
+                <button class="nq-btn nq-btn-danger" id="deleteConfirmBtn" onclick="executeDelete()">
+                    <i class="ri-delete-bin-line"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL 3 — Clear All History Confirmation
+══════════════════════════════════════════════════════ -->
+<div class="nq-backdrop" id="clearBackdrop" onclick="handleBackdropClick(event,'clearBackdrop')">
+    <div class="nq-modal nq-modal-sm" role="dialog" aria-modal="true" aria-labelledby="clearModalTitle">
+        <div class="nq-modal-head">
+            <div class="nq-modal-title">
+                <div class="nq-modal-icon nq-icon-amber"><i class="ri-spam-2-line"></i></div>
+                <div>
+                    <div class="nq-modal-label" id="clearModalTitle">Clear All History</div>
+                    <div class="nq-modal-sublabel">Permanent bulk deletion</div>
+                </div>
+            </div>
+            <button class="nq-modal-close" onclick="closeModal('clearBackdrop')">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+
+        <div class="nq-confirm-body">
+            <div class="nq-confirm-icon-wrap amber"><i class="ri-alert-line"></i></div>
+            <div class="nq-confirm-text">
+                <h3>Clear all query history?</h3>
+                <p>This will permanently delete <strong id="clearCountLabel">all entries</strong> from your server-side history. The sidebar will also be cleared. <strong>This cannot be undone.</strong></p>
+            </div>
+        </div>
+
+        <div class="nq-modal-foot">
+            <div class="nq-modal-foot-meta">
+                <i class="ri-database-line"></i> Server + sidebar
+            </div>
+            <div class="nq-foot-actions">
+                <button class="nq-btn nq-btn-ghost" onclick="closeModal('clearBackdrop')">
+                    Cancel
+                </button>
+                <button class="nq-btn nq-btn-danger" onclick="executeClearAll()">
+                    <i class="ri-spam-2-line"></i> Clear Everything
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
